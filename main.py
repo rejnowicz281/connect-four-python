@@ -27,9 +27,10 @@ class Player:
         self.discs = []
         self.color = color
         self.name = name
+        self.current_disc = None
 
-    def give_new_disc(self, col_id=3):
-        self.discs.insert(0, Disc(col_id, 0, self.color))
+    def grab_new_disc(self, col_id=3):
+        self.current_disc = Disc(col_id, 0, self.color)
 
     def four_in_a_row_check(self):
         for disc in self.discs:
@@ -99,7 +100,7 @@ class Board:
         for row in reversed(self.grid):
             if row[column_id] is None:
                 row[column_id] = disc
-                return row_id, column_id
+                return column_id, row_id
             else:
                 row_id -= 1
         return False
@@ -136,7 +137,7 @@ class Game:
         self.player2 = Player("player2", (0, 0, 255))
         self.current_player = None
         self.randomize_current_player()
-        self.current_player.give_new_disc()
+        self.current_player.grab_new_disc()
         self.board = Board()
         self.game_state = "running"
 
@@ -155,15 +156,16 @@ class Game:
         if drop is not False:
             current_disc.col_id = drop[0]
             current_disc.row_id = drop[1]
+            self.current_player.discs.append(current_disc)
             self.update_game_state()
 
     def initiate_next_turn(self):
         col_id = game.current_disc().col_id
         self.set_next_player()
-        self.current_player.give_new_disc(col_id)
+        self.current_player.grab_new_disc(col_id)
 
     def current_disc(self):
-        return self.current_player.discs[0]
+        return self.current_player.current_disc
 
     def randomize_current_player(self):
         self.current_player = random.choice([self.player1, self.player2])
