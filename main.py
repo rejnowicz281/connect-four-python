@@ -69,11 +69,11 @@ class Disc:
         self.row_id = row_id
         self.color = color
 
-    def draw(self):
+    def draw(self, surface=screen):
         x = (self.col_id * CELL_SIZE) + CELL_SIZE / 2
         y = (self.row_id * CELL_SIZE) + CELL_SIZE / 2
 
-        pygame.draw.circle(screen, self.color, (x, y), CELL_SIZE / 2.1)
+        pygame.draw.circle(surface, self.color, (x, y), CELL_SIZE / 2.1)
 
     def move_left(self):
         # Make sure the disc snaps back in the correct column before being able to move
@@ -95,11 +95,11 @@ class Board:
     def __init__(self):
         self.grid = [[None] * self.COLS for _ in range(self.ROWS)]
 
-    def drop(self, disc, column_id):
-        row_id = self.ROWS
+    def drop(self, color, column_id):
+        row_id = self.ROWS - 1
         for row in reversed(self.grid):
             if row[column_id] is None:
-                row[column_id] = disc
+                row[column_id] = Disc(column_id, row_id, color)
                 return column_id, row_id
             else:
                 row_id -= 1
@@ -113,12 +113,13 @@ class Board:
 
         for row_id in range(self.ROWS):
             for column_id in range(self.COLS):
-                x = (column_id * CELL_SIZE) + CELL_SIZE / 2
-                y = (row_id * CELL_SIZE) + CELL_SIZE / 2
                 disc = self.grid[row_id][column_id]
-                color = disc.color if disc is not None else (0, 0, 0)
-
-                pygame.draw.circle(board, color, (x, y), CELL_SIZE / 2.1)
+                if disc is not None:
+                    disc.draw(board)
+                else:
+                    x = (column_id * CELL_SIZE) + CELL_SIZE / 2
+                    y = (row_id * CELL_SIZE) + CELL_SIZE / 2
+                    pygame.draw.circle(board, (0, 0, 0), (x, y), CELL_SIZE / 2.1)
 
         screen.blit(board, (0, CELL_SIZE))
 
@@ -152,7 +153,7 @@ class Game:
     def drop_current_disc(self):
         current_disc = self.current_disc()
 
-        drop = self.board.drop(current_disc, round(current_disc.col_id))
+        drop = self.board.drop(current_disc.color, round(current_disc.col_id))
         if drop is not False:
             dropped_disc = Disc(drop[0], drop[1], self.current_player.color)
             self.current_player.discs.append(dropped_disc)
