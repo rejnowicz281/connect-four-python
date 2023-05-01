@@ -154,9 +154,8 @@ class Game:
 
         drop = self.board.drop(current_disc, round(current_disc.col_id))
         if drop is not False:
-            current_disc.col_id = drop[0]
-            current_disc.row_id = drop[1]
-            self.current_player.discs.append(current_disc)
+            dropped_disc = Disc(drop[0], drop[1], self.current_player.color)
+            self.current_player.discs.append(dropped_disc)
             self.update_game_state()
 
     def initiate_next_turn(self):
