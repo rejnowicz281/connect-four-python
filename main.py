@@ -73,7 +73,7 @@ class Disc:
         x = (self.col_id * CELL_SIZE) + CELL_SIZE / 2
         y = (self.row_id * CELL_SIZE) + CELL_SIZE / 2
 
-        pygame.draw.circle(screen, self.color, (x, y), CELL_SIZE / 2)
+        pygame.draw.circle(screen, self.color, (x, y), CELL_SIZE / 2.1)
 
     def move_left(self):
         # Make sure the disc snaps back in the correct column before being able to move
@@ -118,7 +118,7 @@ class Board:
                 disc = self.grid[row_id][column_id]
                 color = disc.color if disc is not None else (0, 0, 0)
 
-                pygame.draw.circle(board, color, (x, y), CELL_SIZE / 2)
+                pygame.draw.circle(board, color, (x, y), CELL_SIZE / 2.1)
 
         screen.blit(board, (0, CELL_SIZE))
 
