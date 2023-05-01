@@ -28,59 +28,63 @@ class Player:
         self.color = color
         self.name = name
 
-    def give_new_disc(self, x=3):
-        self.discs.insert(0, Disc(x, 0, self.color))
+    def give_new_disc(self, col_id=3):
+        self.discs.insert(0, Disc(col_id, 0, self.color))
 
     def four_in_a_row_check(self):
         for disc in self.discs:
-            if self.has_disc(disc.x + 1, disc.y) and self.has_disc(disc.x + 2, disc.y) and self.has_disc(disc.x + 3,
-                                                                                                         disc.y):
+            if self.has_disc(disc.row_id, disc.col_id + 1) \
+                    and self.has_disc(disc.row_id, disc.col_id + 2) \
+                    and self.has_disc(disc.row_id, disc.col_id + 3):
                 # Horizontal check
                 return True
-            elif self.has_disc(disc.x, disc.y + 1) and self.has_disc(disc.x, disc.y + 2) and self.has_disc(disc.x,
-                                                                                                           disc.y + 3):
+            elif self.has_disc(disc.row_id + 1, disc.col_id) \
+                    and self.has_disc(disc.row_id + 2, disc.col_id) \
+                    and self.has_disc(disc.row_id + 3, disc.col_id):
                 # Vertical Check
                 return True
-            elif self.has_disc(disc.x + 1, disc.y + 1) and self.has_disc(disc.x + 2, disc.y + 2) and self.has_disc(
-                    disc.x + 3, disc.y + 3):
+            elif self.has_disc(disc.row_id + 1, disc.col_id + 1) \
+                    and self.has_disc(disc.row_id + 2, disc.col_id + 2) \
+                    and self.has_disc(disc.row_id + 3, disc.col_id + 3):
                 # Diagonal Check I
                 return True
-            elif self.has_disc(disc.x - 1, disc.y + 1) and self.has_disc(disc.x - 2, disc.y + 2) and self.has_disc(
-                    disc.x - 3, disc.y + 3):
+            elif self.has_disc(disc.row_id + 1, disc.col_id - 1) \
+                    and self.has_disc(disc.row_id + 2, disc.col_id - 2) \
+                    and self.has_disc(disc.row_id + 3, disc.col_id - 3):
                 # Diagonal Check II
                 return True
         return False
 
-    def has_disc(self, x, y):
+    def has_disc(self, row_id, col_id):
         for disc in self.discs:
-            if disc.x == x and disc.y == y:
+            if disc.row_id == row_id and disc.col_id == col_id:
                 return True
         return False
 
 
 class Disc:
-    def __init__(self, x, y, color=(255, 255, 255)):
-        self.x = x
-        self.y = y
+    def __init__(self, col_id, row_id, color=(255, 255, 255)):
+        self.col_id = col_id
+        self.row_id = row_id
         self.color = color
 
     def draw(self):
-        x = (self.x * CELL_SIZE) + CELL_SIZE / 2
-        y = (self.y * CELL_SIZE) + CELL_SIZE / 2
+        x = (self.col_id * CELL_SIZE) + CELL_SIZE / 2
+        y = (self.row_id * CELL_SIZE) + CELL_SIZE / 2
 
         pygame.draw.circle(screen, self.color, (x, y), CELL_SIZE / 2)
 
     def move_left(self):
         # Make sure the disc snaps back in the correct column before being able to move
-        if isinstance(self.x, float):
-            self.x = int(self.x)
+        if isinstance(self.col_id, float):
+            self.col_id = int(self.col_id)
         else:
-            self.x -= 1
+            self.col_id -= 1
 
     def move_right(self):
         # Make sure the disc snaps back in the correct column before moving
-        self.x = int(self.x)
-        self.x += 1
+        self.col_id = int(self.col_id)
+        self.col_id += 1
 
 
 class Board:
@@ -147,16 +151,16 @@ class Game:
     def drop_current_disc(self):
         current_disc = self.current_disc()
 
-        drop = self.board.drop(current_disc, round(current_disc.x))
+        drop = self.board.drop(current_disc, round(current_disc.col_id))
         if drop is not False:
-            current_disc.x = drop[0]
-            current_disc.y = drop[1]
+            current_disc.col_id = drop[0]
+            current_disc.row_id = drop[1]
             self.update_game_state()
 
     def initiate_next_turn(self):
-        col = game.current_disc().y
+        col_id = game.current_disc().col_id
         self.set_next_player()
-        self.current_player.give_new_disc(col)
+        self.current_player.give_new_disc(col_id)
 
     def current_disc(self):
         return self.current_player.discs[0]
@@ -190,15 +194,15 @@ while running:
         if game.game_state == "running":
             if event.type == pygame.MOUSEMOTION \
                     and event.pos[0] < (SCREEN_COLS - 1) * CELL_SIZE:  # Make sure disc doesn't go off-screen
-                game.current_disc().x = event.pos[0] / CELL_SIZE
+                game.current_disc().col_id = event.pos[0] / CELL_SIZE
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 game.drop_current_disc()
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT and game.current_disc().x != 0:
+                if event.key == pygame.K_LEFT and game.current_disc().col_id != 0:
                     game.current_disc().move_left()
-                elif event.key == pygame.K_RIGHT and game.current_disc().x != SCREEN_COLS - 1:
+                elif event.key == pygame.K_RIGHT and game.current_disc().col_id != SCREEN_COLS - 1:
                     game.current_disc().move_right()
                 elif event.key == pygame.K_SPACE:
                     game.drop_current_disc()
