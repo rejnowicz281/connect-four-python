@@ -18,6 +18,9 @@ SCREEN_WIDTH = SCREEN_COLS * CELL_SIZE
 SCREEN_HEIGHT = SCREEN_ROWS * CELL_SIZE
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
+# Hide mouse cursor
+pygame.mouse.set_visible(False)
+
 
 class Player:
     def __init__(self, name, color):
@@ -25,8 +28,8 @@ class Player:
         self.color = color
         self.name = name
 
-    def give_new_disc(self):
-        self.discs.insert(0, Disc(3, 0, self.color))
+    def give_new_disc(self, x=3):
+        self.discs.insert(0, Disc(x, 0, self.color))
 
     def four_in_a_row_check(self):
         for disc in self.discs:
@@ -66,6 +69,18 @@ class Disc:
         y = (self.y * CELL_SIZE) + CELL_SIZE / 2
 
         pygame.draw.circle(screen, self.color, (x, y), CELL_SIZE / 2)
+
+    def move_left(self):
+        # Make sure the disc snaps back in the correct column before being able to move
+        if isinstance(self.x, float):
+            self.x = int(self.x)
+        else:
+            self.x -= 1
+
+    def move_right(self):
+        # Make sure the disc snaps back in the correct column before moving
+        self.x = int(self.x)
+        self.x += 1
 
 
 class Board:
@@ -121,33 +136,30 @@ class Game:
         self.board = Board()
         self.game_state = "running"
 
-    def play(self):
-        game.board.draw()
-        if self.game_state == "running":
-            current_disc = self.current_player.discs[0]
-            current_disc.draw()
+    def update_game_state(self):
+        if self.current_player.four_in_a_row_check():
+            self.game_state = "win"
+        elif self.board.is_full_check():
+            self.game_state = "tie"
+        else:
+            self.initiate_next_turn()
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT] and current_disc.x != 0:
-                current_disc.x -= 1
-            elif keys[pygame.K_RIGHT] and current_disc.x != SCREEN_COLS - 1:
-                current_disc.x += 1
-            elif keys[pygame.K_SPACE]:
-                drop = self.board.drop(current_disc, current_disc.x)
-                if drop is not False:
-                    current_disc.x = drop[0]
-                    current_disc.y = drop[1]
-                    if self.current_player.four_in_a_row_check():
-                        self.game_state = "win"
-                    elif self.board.is_full_check():
-                        self.game_state = "tie"
-                    else:
-                        self.set_next_player()
-                        self.current_player.give_new_disc()
-        elif self.game_state == "win":
-            self.draw_text(f"{self.current_player.name} Wins!")
-        elif self.game_state == "tie":
-            self.draw_text(f"It's a tie")
+    def drop_current_disc(self):
+        current_disc = self.current_disc()
+
+        drop = self.board.drop(current_disc, round(current_disc.x))
+        if drop is not False:
+            current_disc.x = drop[0]
+            current_disc.y = drop[1]
+            self.update_game_state()
+
+    def initiate_next_turn(self):
+        col = game.current_disc().y
+        self.set_next_player()
+        self.current_player.give_new_disc(col)
+
+    def current_disc(self):
+        return self.current_player.discs[0]
 
     def randomize_current_player(self):
         self.current_player = random.choice([self.player1, self.player2])
@@ -168,7 +180,6 @@ class Game:
 game = Game()
 running = True
 while running:
-    pygame.time.Clock().tick(10)
     # Background
     screen.fill((0, 0, 0))
 
@@ -176,6 +187,28 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    game.play()
+        if game.game_state == "running":
+            if event.type == pygame.MOUSEMOTION \
+                    and event.pos[0] < (SCREEN_COLS - 1) * CELL_SIZE:  # Make sure disc doesn't go off-screen
+                game.current_disc().x = event.pos[0] / CELL_SIZE
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                game.drop_current_disc()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT and game.current_disc().x != 0:
+                    game.current_disc().move_left()
+                elif event.key == pygame.K_RIGHT and game.current_disc().x != SCREEN_COLS - 1:
+                    game.current_disc().move_right()
+                elif event.key == pygame.K_SPACE:
+                    game.drop_current_disc()
+
+    if game.game_state == "running":
+        game.current_disc().draw()
+    elif game.game_state == "win":
+        game.draw_text(f"{game.current_player.name} Wins!")
+    elif game.game_state == "tie":
+        game.draw_text(f"It's a tie")
+
+    game.board.draw()
     pygame.display.update()
