@@ -134,8 +134,8 @@ class Board:
 
 class Game:
     def __init__(self):
-        self.player1 = Player("player1", (255, 0, 0))
-        self.player2 = Player("player2", (0, 0, 255))
+        self.player1 = Player("Red", (255, 0, 0))
+        self.player2 = Player("Blue", (0, 0, 255))
         self.current_player = None
         self.randomize_current_player()
         self.current_player.grab_new_disc()
@@ -160,7 +160,7 @@ class Game:
             self.update_game_state()
 
     def initiate_next_turn(self):
-        col_id = game.current_disc().col_id
+        col_id = self.current_disc().col_id
         self.set_next_player()
         self.current_player.grab_new_disc(col_id)
 
